@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Control de Ingresos y Egresos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+      color: white;
+    }
+
+    .ingreso {
+      color: green;
+    }
+
+    .egreso {
+      color: red;
+    }
+
+    #balance {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .eliminar {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .eliminar:hover {
+      background-color: darkred;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Control de Ingresos y Egresos</h1>
+
+  <form id="registroForm">
+    <input type="text" id="nombre" placeholder="Nombre del gasto o ingreso" required />
+    <input type="number" id="monto" placeholder="Monto" required />
+    <select id="tipo">
+      <option value="ingreso">Ingreso</option>
+      <option value="egreso">Egreso</option>
+    </select>
+    <input type="date" id="fecha" required />
+    <button type="submit">Registrar</button>
+  </form>
+
+  <div id="balance">Balance: S/ 0.00</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Nombre</th>
+        <th>Monto</th>
+        <th>Tipo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaRegistros">
+      <!-- Filas dinámicas -->
+    </tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('registroForm');
+    const tabla = document.getElementById('tablaRegistros');
+    const balanceEl = document.getElementById('balance');
+    const fechaInput = document.getElementById('fecha');
+
+    // Fecha por defecto: hoy
+    const hoy = new Date().toISOString().split("T")[0];
+    fechaInput.value = hoy;
+
+    let balance = 0;
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const monto = parseFloat(document.getElementById('monto').value);
+      const tipo = document.getElementById('tipo').value;
+      const fecha = document.getElementById('fecha').value;
+
+      if (nombre === "" || isNaN(monto) || monto <= 0 || !fecha) {
+        alert("Completa todos los campos correctamente.");
+        return;
+      }
+
+      // Crear fila
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td>${fecha}</td>
+        <td>${nombre}</td>
+        <td class="${tipo === 'ingreso' ? 'ingreso' : 'egreso'}">
+          ${tipo === 'ingreso' ? '+' : '-'}$${monto.toFixed(2)}
+        </td>
+        <td>${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</td>
+        <td><button class="eliminar">🗑️</button></td>
+      `;
+
+      // Agregar la fila a la tabla
+      tabla.appendChild(fila);
+
+      // Actualizar balance
+      balance += (tipo === 'ingreso' ? monto : -monto);
+      balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+
+      // Agregar funcionalidad de eliminar
+      fila.querySelector('.eliminar').addEventListener('click', function () {
+        const montoTexto = fila.children[2].textContent;
+        const montoFila = parseFloat(montoTexto.replace(/[^0-9.]/g, ''));
+
+        if (tipo === 'ingreso') {
+          balance -= montoFila;
+        } else {
+          balance += montoFila;
+        }
+
+        balanceEl.textContent = `Balance: $${balance.toFixed(2)}`;
+        fila.remove();
+      });
+
+      // Limpiar formulario
+      form.reset();
+      fechaInput.value = hoy;
+    });
+  </script>
+
+</body>
+</html>
